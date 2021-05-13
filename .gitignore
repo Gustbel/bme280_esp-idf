@@ -3,3 +3,6 @@
 
 # BOSCH driver related
 BME280_driver*
+
+# Build directories
+[Bb]uild/
