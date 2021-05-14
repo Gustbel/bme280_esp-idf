@@ -1,2 +1,8 @@
 # IDEs an other tools related
 *.code-workspace
+
+# BOSCH driver related
+BME280_driver*
+
+# Build directories
+[Bb]uild/
