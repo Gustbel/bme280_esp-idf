@@ -8,14 +8,14 @@ BME280 API
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "sdkconfig.h"
-#include "bme280_api/BME280_ESP32C3.h"
+#include "bme280/bme280.h"
 
 static const char *TAG = "exampleApp";
 
 #define DELAY_TIME_BETWEEN_ITEMS_MS 1000 /*!< delay time between different test items */
 
-#define I2C_MASTER_SCL_IO CONFIG_I2C_MASTER_SCL               /*!< gpio number for I2C master clock */
-#define I2C_MASTER_SDA_IO CONFIG_I2C_MASTER_SDA               /*!< gpio number for I2C master data  */
+#define I2C_MASTER_SCL_IO 18               /*!< gpio number for I2C master clock */
+#define I2C_MASTER_SDA_IO 19               /*!< gpio number for I2C master data  */
 
 #define I2C_MASTER_FREQ_HZ CONFIG_I2C_MASTER_FREQUENCY        /*!< I2C master clock frequency */
 #define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */

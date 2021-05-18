@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "bme280_defs.h": "c"
+    }
+}

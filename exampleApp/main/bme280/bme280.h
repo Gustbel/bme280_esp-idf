@@ -1,53 +1,33 @@
-/**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
-*
-* BSD-3-Clause
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* 3. Neither the name of the copyright holder nor the names of its
-*    contributors may be used to endorse or promote products derived from
-*    this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-* POSSIBILITY OF SUCH DAMAGE.
-*
-* @file       bme280.h
-* @date       2020-03-28
-* @version    v3.5.0
-*
-*/
-
-/*! @file bme280.h
- * @brief Sensor driver for BME280 sensor
- */
-
-/*!
- * @defgroup bme280 BME280
- * @brief <a href="https://www.bosch-sensortec.com/bst/products/all_products/bme280">Product Overview</a>
- * and  <a href="https://github.com/BoschSensortec/BME280_driver">Sensor API Source Code</a>
- */
-
 #ifndef BME280_H_
 #define BME280_H_
+
+#include "bme280_defs.h"
+
+
+#define _I2C_NUMBER(num) I2C_NUM_##num
+#define I2C_NUMBER(num) _I2C_NUMBER(num)
+#define BME280_SENSOR_ADDR 0x76
+#define I2C_MASTER_NUM I2C_NUMBER(CONFIG_I2C_MASTER_PORT_NUM) /*!< I2C port number for master dev */
+
+#define WRITE_BIT I2C_MASTER_WRITE              /*!< I2C master write */
+#define READ_BIT I2C_MASTER_READ                /*!< I2C master read */
+#define ACK_CHECK_EN 0x1                        /*!< I2C master will check ack from slave*/
+#define ACK_CHECK_DIS 0x0                       /*!< I2C master will not check ack from slave */
+#define ACK_VAL 0x0                             /*!< I2C ack value */
+#define NACK_VAL 0x1                            /*!< I2C nack value */
+
+//
+// Data types definitions -----------------------------------------------------
+//
+typedef struct bme280_dev BME280_DEVICE;
+typedef struct bme280_data BME280_DATA;
+
+//
+// Functions prototypes -------------------------------------------------------
+BME280_INTF_RET_TYPE esp32c3_read_bme280(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
+BME280_INTF_RET_TYPE esp32c3_write_bme280(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr);
+void esp32c3_delay_us_bme280(uint32_t period, void *intf_ptr);
+
 
 /*! CPP guard */
 #ifdef __cplusplus

@@ -1,45 +1,11 @@
-/**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
-*
-* BSD-3-Clause
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* 3. Neither the name of the copyright holder nor the names of its
-*    contributors may be used to endorse or promote products derived from
-*    this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-* POSSIBILITY OF SUCH DAMAGE.
-*
-* @file       bme280.c
-* @date       2020-03-28
-* @version    v3.5.0
-*
-*/
-
-/*! @file bme280.c
- * @brief Sensor driver for BME280 sensor
- */
+#include <stdlib.h>
+#include <stdio.h>
+#include "esp_log.h"
+#include "driver/i2c.h"
+#include "sdkconfig.h"
+#include "bme280_defs.h"
 #include "bme280.h"
+
 
 /**\name Internal macros */
 /* To identify osr settings selected by user */
@@ -1586,4 +1552,91 @@ static int8_t null_ptr_check(const struct bme280_dev *dev)
     }
 
     return rslt;
+}
+
+
+/**
+    @brief Read BME280 through I2C port
+
+    @param reg_addr The address of the first register to read.
+    @param reg_data The buffer to store the data retrieved by BME280.
+    @param len The number of positions to read.
+    @param intf_ptr Not used. Keep it for signature compatibility.
+
+    @attention This function is platform-specific. For a trust data access, please use the drivers functions.
+*/
+BME280_INTF_RET_TYPE esp32c3_read_bme280(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
+{
+    BME280_INTF_RET_TYPE ret;
+    int i;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, BME280_SENSOR_ADDR << 1 | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, reg_addr, ACK_CHECK_EN);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    
+    cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, BME280_SENSOR_ADDR << 1 | READ_BIT, ACK_CHECK_EN);
+
+    for (i = 0; i < (len - 1); i++)
+    {
+        i2c_master_read_byte(cmd, reg_data + i, ACK_VAL);
+    }
+
+    i2c_master_read_byte(cmd, reg_data + i, NACK_VAL);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    
+    return ret;
+}
+
+/**
+ *  @brief Write BME280 register through I2C port
+ *  
+ *  @param reg_addr The address of the first register to write.
+ *  @param reg_data The buffer that stores the data to be written.
+ *  @param len The number of positions to write.
+ *  @param intf_ptr Not used. Keep it in order to maintain signature compatibility.
+ * 
+ *  @attention This function is platform-specific. For a trust data access, please use the drivers functions.
+*/
+BME280_INTF_RET_TYPE esp32c3_write_bme280(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
+{
+
+    BME280_INTF_RET_TYPE ret;
+    int i;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, BME280_SENSOR_ADDR << 1 | WRITE_BIT, ACK_CHECK_EN);
+
+    for (i = 0; i < len; i++)
+    {
+        i2c_master_write_byte(cmd, reg_addr + i, ACK_CHECK_EN);
+        i2c_master_write_byte(cmd, *(reg_data + i), ACK_CHECK_EN);
+    }
+
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+
+    return ret;
+}
+
+/**
+ *  @brief Wait for a specific amount of us
+ *  
+ *  @param period The number of microseconds to wait.
+ *  @param intf_ptr Not used. Keep it in order to maintain the signature compatibility.
+ * 
+ *  @attention This function is platform-specific. For a trust data access, please use the drivers functions.
+ */
+void esp32c3_delay_us_bme280(uint32_t period, void *intf_ptr)
+{
+    vTaskDelay((period / 1000) / portTICK_RATE_MS);
 }
