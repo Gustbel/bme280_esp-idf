@@ -3,11 +3,8 @@
 
 #include "bme280_defs.h"
 
-
-#define _I2C_NUMBER(num) I2C_NUM_##num
-#define I2C_NUMBER(num) _I2C_NUMBER(num)
 #define BME280_SENSOR_ADDR 0x76
-#define I2C_MASTER_NUM I2C_NUMBER(CONFIG_I2C_MASTER_PORT_NUM) /*!< I2C port number for master dev */
+#define I2C_MASTER_NUM 0
 
 #define WRITE_BIT I2C_MASTER_WRITE              /*!< I2C master write */
 #define READ_BIT I2C_MASTER_READ                /*!< I2C master read */
@@ -27,6 +24,8 @@ typedef struct bme280_data BME280_DATA;
 BME280_INTF_RET_TYPE esp32c3_read_bme280(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
 BME280_INTF_RET_TYPE esp32c3_write_bme280(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr);
 void esp32c3_delay_us_bme280(uint32_t period, void *intf_ptr);
+bool init_bme280();
+float get_bme280(int);
 
 
 /*! CPP guard */

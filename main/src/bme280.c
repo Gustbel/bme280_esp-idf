@@ -7,6 +7,17 @@
 #include "bme280.h"
 
 
+
+static BME280_DEVICE device;
+static BME280_DATA mess_data;
+
+uint8_t ret;
+
+uint8_t settings_sel;
+int cnt = 0;
+
+
+
 /**\name Internal macros */
 /* To identify osr settings selected by user */
 #define OVERSAMPLING_SETTINGS    UINT8_C(0x07)
@@ -1639,4 +1650,56 @@ BME280_INTF_RET_TYPE esp32c3_write_bme280(uint8_t reg_addr, const uint8_t *reg_d
 void esp32c3_delay_us_bme280(uint32_t period, void *intf_ptr)
 {
     vTaskDelay((period / 1000) / portTICK_RATE_MS);
+}
+
+
+// S+A Functions
+
+bool init_bme280()
+{
+    // Before access to the BME280, we need to setup the device handler
+    // by assign the platform specific functions which brings access
+    // to the communication port. These functions are implemented in
+    // bme280_api/BME280_ESP32C3.c file.
+    device.read = esp32c3_read_bme280;
+    device.write = esp32c3_write_bme280;
+    device.delay_us = esp32c3_delay_us_bme280;
+    device.intf = BME280_I2C_INTF;
+
+    // Init native function
+    bme280_init(&device);
+
+    // Recommended mode of operation: Indoor navigation. Here is the
+    // setup for oversampling and filtering, according to the BOSH
+    // docs about Indoor navigation use. For other configuration, please
+    // refer to the docs.
+    device.settings.osr_h = BME280_OVERSAMPLING_1X;
+    device.settings.osr_p = BME280_OVERSAMPLING_16X;
+    device.settings.osr_t = BME280_OVERSAMPLING_2X;
+    device.settings.filter = BME280_FILTER_COEFF_16;
+    settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL;
+    ret = bme280_set_sensor_settings(settings_sel, &device);
+    
+    if (ret == ESP_OK)
+        return true;
+    else
+        return false;
+}
+
+float get_bme280(int a)
+ {
+    bme280_set_sensor_mode(BME280_FORCED_MODE, &device);
+    device.delay_us(40000, device.intf_ptr);
+    bme280_get_sensor_data(BME280_ALL, &mess_data, &device);
+    device.delay_us(10000, device.intf_ptr);
+    switch (a) 
+    {	
+        case 0:	/* Temperature °C */
+            return mess_data.temperature; 
+        case 1:	/* Humidity % */
+            return mess_data.humidity;
+        case 2:	/* Pressure hPa */
+			return mess_data.pressure;
+    }
+    return 0.0;
 }
